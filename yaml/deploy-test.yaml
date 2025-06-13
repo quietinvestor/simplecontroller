@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: testpod
+  name: testpod
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: testpod
+  template:
+    metadata:
+      labels:
+        app: testpod
+        simplecontroller.io/watch: "true"
+    spec:
+      containers:
+        - image: registry.k8s.io/pause:3.10
+          name: pause

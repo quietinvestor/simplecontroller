@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: simplecontroller
+  name: simplecontroller
+  namespace: simplecontroller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: simplecontroller
+  template:
+    metadata:
+      labels:
+        app: simplecontroller
+    spec:
+      containers:
+        - image: simplecontroller:0.1.0
+          name: simplecontroller
+      serviceAccountName: simplecontroller
