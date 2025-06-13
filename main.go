@@ -5,10 +5,11 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/klog/v2/textlogger"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 const (
@@ -48,9 +49,7 @@ func (r *PodLabelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 }
 
 func (r *PodLabelReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).For(&corev1.Pod{}).WithEventFilter(predicate.NewPredicateFuncs(func(o client.Object) bool {
-		return o.GetLabels()[watchKey] == watchValue
-	})).Complete(r)
+	return ctrl.NewControllerManagedBy(mgr).For(&corev1.Pod{}).Complete(r)
 }
 
 func main() {
@@ -58,14 +57,16 @@ func main() {
 	logger := textlogger.NewLogger(loggerConfig).WithName("simplecontroller")
 	ctrl.SetLogger(logger)
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{})
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		Cache: cache.Options{
+			DefaultLabelSelector: labels.SelectorFromSet(map[string]string{watchKey: watchValue}),
+		},
+	})
 	if err != nil {
 		panic(err)
 	}
 
-	if err := (&PodLabelReconciler{
-		Client: mgr.GetClient(),
-	}).SetupWithManager(mgr); err != nil {
+	if err := (&PodLabelReconciler{Client: mgr.GetClient()}).SetupWithManager(mgr); err != nil {
 		panic(err)
 	}
 
