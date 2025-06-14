@@ -26,12 +26,15 @@ type PodLabelReconciler struct {
 // Reconcile adds the color label to a Pod if it has the watch label.
 // It only patches the Pod if the label is missing or has an incorrect value.
 func (r *PodLabelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	logger := ctrl.LoggerFrom(ctx)
+
 	var pod corev1.Pod
 
 	if err := r.Get(ctx, req.NamespacedName, &pod); err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
+		logger.Error(err, "failed to get pod")
 		return ctrl.Result{}, err
 	}
 
@@ -45,8 +48,14 @@ func (r *PodLabelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	updated := pod.DeepCopy()
 	updated.Labels[ColorKey] = ColorValue
+	logger.V(0).Info("successfully labeled pod")
 
-	return ctrl.Result{}, r.Patch(ctx, updated, client.MergeFrom(&pod))
+	if err := r.Patch(ctx, updated, client.MergeFrom(&pod)); err != nil {
+		logger.Error(err, "failed to patch pod")
+		return ctrl.Result{}, err
+	}
+
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager registers the PodLabelReconciler with the manager
