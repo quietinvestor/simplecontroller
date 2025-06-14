@@ -1,7 +1,7 @@
 # Build stage
 FROM golang:1.24-bookworm AS builder
 
-WORKDIR /build
+WORKDIR /workspace
 
 COPY go.mod go.sum ./
 RUN go mod download
@@ -16,7 +16,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 # Runtime stage
 FROM scratch
 
-COPY --from=builder /build/simplecontroller /simplecontroller
+COPY --from=builder /workspace/simplecontroller /simplecontroller
 
 USER 65532:65532 # nobody:nogroup
 

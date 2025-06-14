@@ -13,7 +13,7 @@ A simple Kubernetes controller that:
 2.  Patches them with the label:
 
     ```yaml
-    simplecontroller.io/color: "blue"
+    simplecontroller.io/color: blue
     ```
 
 ## Build
@@ -31,6 +31,6 @@ docker build -t simplecontroller:0.1.0 .
 ```bash
 kind create cluster
 kind load docker-image simplecontroller:0.1.0
-kubectl apply -f yaml/
+kubectl apply -f config/default
 kind delete cluster
 ```

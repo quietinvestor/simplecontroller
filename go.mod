@@ -1,4 +1,4 @@
-module simplecontroller
+module github.com/quietinvestor/simplecontroller
 
 go 1.24.4
 
