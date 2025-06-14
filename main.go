@@ -54,7 +54,7 @@ func main() {
 	}
 
 	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
-	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "namespace to watch (empty: watch all)")
+	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "Namespace to watch. If empty, watch all.")
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

@@ -4,7 +4,7 @@
 
 A simple Kubernetes controller that:
 
-1.  Watches for pods across all namespaces with the label:
+1.  Watches for pods in selected namespace with the label:
 
     ```yaml
     simplecontroller.io/watch: "true"
@@ -17,6 +17,23 @@ A simple Kubernetes controller that:
     ```
 
 ## Usage
+
+```bash
+$ simplecontroller --help
+Simple controller for labeling Pods
+
+Usage:
+  simplecontroller [flags]
+
+Flags:
+  -h, --help                    help for simplecontroller
+      --kubeconfig string       Paths to a kubeconfig. Only required if out-of-cluster.
+  -n, --namespace string        Namespace to watch. If empty, watch all.
+  -v, --v Level                 number for the log level verbosity of the testing logger
+      --vmodule pattern=N,...   comma-separated list of pattern=N log level settings for files matching the patterns
+```
+
+## Build
 
 ### Go
 
