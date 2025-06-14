@@ -14,10 +14,11 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     -o simplecontroller .
 
 # Runtime stage
-FROM scratch
+FROM gcr.io/distroless/static:nonroot
 
-COPY --from=builder /workspace/simplecontroller /simplecontroller
+WORKDIR /
+COPY --from=builder /workspace/simplecontroller .
 
-USER 65532:65532 # nobody:nogroup
+USER nonroot:nonroot
 
 ENTRYPOINT ["/simplecontroller"]
