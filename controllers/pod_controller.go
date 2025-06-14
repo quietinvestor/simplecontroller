@@ -35,7 +35,7 @@ func (r *PodLabelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
-	if pod.Labels[ColorKey] == ColorValue {
+	if v, ok := pod.Labels[ColorKey]; ok && v == ColorValue {
 		return ctrl.Result{}, nil
 	}
 
