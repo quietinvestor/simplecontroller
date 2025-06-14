@@ -1,7 +1,11 @@
 package main
 
 import (
+	"flag"
+	"os"
+
 	"github.com/quietinvestor/simplecontroller/controllers"
+	"github.com/spf13/cobra"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/klog/v2/textlogger"
@@ -11,23 +15,48 @@ import (
 
 func main() {
 	loggerConfig := textlogger.NewConfig()
-	logger := textlogger.NewLogger(loggerConfig).WithName("simplecontroller")
-	ctrl.SetLogger(logger)
+	loggerConfig.AddFlags(flag.CommandLine)
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Cache: cache.Options{
-			DefaultLabelSelector: labels.SelectorFromSet(map[string]string{controllers.WatchKey: controllers.WatchValue}),
+	var namespace string
+
+	rootCmd := &cobra.Command{
+		Use:   "simplecontroller",
+		Short: "Simple controller for labeling Pods",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := textlogger.NewLogger(loggerConfig).WithName("simplecontroller")
+			ctrl.SetLogger(logger)
+
+			mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+				Cache: cache.Options{
+					DefaultNamespaces: map[string]cache.Config{
+						namespace: {},
+					},
+					DefaultLabelSelector: labels.SelectorFromSet(map[string]string{
+						controllers.WatchKey: controllers.WatchValue,
+					}),
+				},
+			})
+			if err != nil {
+				logger.Error(err, "unable to create manager")
+				os.Exit(1)
+			}
+
+			if err := (&controllers.PodLabelReconciler{Client: mgr.GetClient()}).SetupWithManager(mgr); err != nil {
+				logger.Error(err, "unable to set up PodLabelReconciler")
+				os.Exit(1)
+			}
+
+			if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+				logger.Error(err, "problem running manager")
+				os.Exit(1)
+			}
 		},
-	})
-	if err != nil {
-		panic(err)
 	}
 
-	if err := (&controllers.PodLabelReconciler{Client: mgr.GetClient()}).SetupWithManager(mgr); err != nil {
-		panic(err)
-	}
+	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
+	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "namespace to watch (empty: watch all)")
 
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		panic(err)
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
 	}
 }

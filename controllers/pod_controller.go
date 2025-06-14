@@ -48,7 +48,7 @@ func (r *PodLabelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	updated := pod.DeepCopy()
 	updated.Labels[ColorKey] = ColorValue
-	logger.V(0).Info("successfully labeled pod")
+	logger.V(2).Info("successfully labeled pod")
 
 	if err := r.Patch(ctx, updated, client.MergeFrom(&pod)); err != nil {
 		logger.Error(err, "failed to patch pod")
