@@ -9,6 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// Label keys and values used to determine whether to patch a Pod.
 const (
 	WatchKey   = "simplecontroller.io/watch"
 	WatchValue = "true"
@@ -17,10 +18,13 @@ const (
 	ColorValue = "blue"
 )
 
+// PodLabelReconciler holds the client used to reconcile Pods based on label criteria.
 type PodLabelReconciler struct {
 	client.Client
 }
 
+// Reconcile adds the color label to a Pod if it has the watch label.
+// It only patches the Pod if the label is missing or has an incorrect value.
 func (r *PodLabelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var pod corev1.Pod
 
@@ -45,6 +49,8 @@ func (r *PodLabelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	return ctrl.Result{}, r.Patch(ctx, updated, client.MergeFrom(&pod))
 }
 
+// SetupWithManager registers the PodLabelReconciler with the manager
+// and configures it to watch Pod resources.
 func (r *PodLabelReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).For(&corev1.Pod{}).Complete(r)
 }
