@@ -18,20 +18,20 @@ A simple Kubernetes controller that:
 
 ## Usage
 
-### Build
+### Go
 
 ```bash
-make build
+make {build|fmt|test|vet}
 ```
 
-### Test
+### Docker
 
 ```bash
-make test
+make docker-build
 ```
 
-### Delete
+### Kind
 
 ```bash
-make delete
+make {kind-test|kind-delete}
 ```
