@@ -16,21 +16,22 @@ A simple Kubernetes controller that:
     simplecontroller.io/color: blue
     ```
 
-## Build
+## Usage
 
-### Docker
+### Build
 
 ```bash
-docker build -t simplecontroller:0.1.0 .
+make build
 ```
 
-## Test
-
-### kind
+### Test
 
 ```bash
-kind create cluster
-kind load docker-image simplecontroller:0.1.0
-kubectl apply -f config/default
-kind delete cluster
+make test
+```
+
+### Delete
+
+```bash
+make delete
 ```
