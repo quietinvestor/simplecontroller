@@ -18,4 +18,19 @@ spec:
       containers:
         - image: simplecontroller:0.1.0
           name: simplecontroller
+          ports:
+            - containerPort: 8081
+              name: health
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
       serviceAccountName: simplecontroller

@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/quietinvestor/simplecontroller/controllers"
@@ -11,6 +13,7 @@ import (
 	"k8s.io/klog/v2/textlogger"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
 )
 
 func main() {
@@ -35,9 +38,25 @@ func main() {
 						controllers.WatchKey: controllers.WatchValue,
 					}),
 				},
+				HealthProbeBindAddress: ":8081",
 			})
 			if err != nil {
 				logger.Error(err, "unable to create manager")
+				os.Exit(1)
+			}
+
+			if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+				logger.Error(err, "unable to set up liveness check")
+				os.Exit(1)
+			}
+
+			if err := mgr.AddReadyzCheck("readyz", func(req *http.Request) error {
+				if !mgr.GetCache().WaitForCacheSync(req.Context()) {
+					return fmt.Errorf("cache not synced")
+				}
+				return nil
+			}); err != nil {
+				logger.Error(err, "unable to set up readiness check")
 				os.Exit(1)
 			}
 
