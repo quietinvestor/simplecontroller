@@ -3,17 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 
-	"github.com/quietinvestor/simplecontroller/internal/controller"
-	"github.com/spf13/cobra"
+	"github.com/quietinvestor/simplecontroller/internal/setup"
 
-	"k8s.io/apimachinery/pkg/labels"
+	"github.com/spf13/cobra"
 	"k8s.io/klog/v2/textlogger"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
-	"sigs.k8s.io/controller-runtime/pkg/healthz"
 )
 
 func main() {
@@ -26,47 +21,14 @@ func main() {
 		Use:   "simplecontroller",
 		Short: "Simple controller for labeling Pods",
 		Run: func(cmd *cobra.Command, args []string) {
-			logger := textlogger.NewLogger(loggerConfig).WithName("simplecontroller")
-			ctrl.SetLogger(logger)
-
-			mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-				Cache: cache.Options{
-					DefaultNamespaces: map[string]cache.Config{
-						namespace: {},
-					},
-					DefaultLabelSelector: labels.SelectorFromSet(map[string]string{
-						controller.WatchKey: controller.WatchValue,
-					}),
-				},
-				HealthProbeBindAddress: ":8081",
-			})
+			mgr, err := setup.SetupManager(namespace, *loggerConfig)
 			if err != nil {
-				logger.Error(err, "unable to create manager")
+				fmt.Fprintf(os.Stderr, "failed to initialize manager: %v\n", err)
 				os.Exit(1)
 			}
 
-			if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-				logger.Error(err, "unable to set up liveness check")
-				os.Exit(1)
-			}
-
-			if err := mgr.AddReadyzCheck("readyz", func(req *http.Request) error {
-				if !mgr.GetCache().WaitForCacheSync(req.Context()) {
-					return fmt.Errorf("cache not synced")
-				}
-				return nil
-			}); err != nil {
-				logger.Error(err, "unable to set up readiness check")
-				os.Exit(1)
-			}
-
-			if err := (&controller.PodLabelReconciler{Client: mgr.GetClient()}).SetupWithManager(mgr); err != nil {
-				logger.Error(err, "unable to set up PodLabelReconciler")
-				os.Exit(1)
-			}
-
-			if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-				logger.Error(err, "problem running manager")
+			if err := mgr.Start(cmd.Context()); err != nil {
+				fmt.Fprintf(os.Stderr, "controller runtime manager exited: %v\n", err)
 				os.Exit(1)
 			}
 		},
@@ -75,6 +37,7 @@ func main() {
 	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "Namespace to watch. If empty, watch all.")
 
+	flag.Parse()
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
