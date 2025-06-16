@@ -3,7 +3,7 @@ DOCKER_TAG ?= simplecontroller:0.1.0
 .PHONY: build fmt test vet docker-build kind-test kind-delete
 
 build: fmt vet | bin
-	go build -o bin/simplecontroller .
+	go build -o bin/simplecontroller ./cmd
 
 fmt:
 	go fmt ./...

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/quietinvestor/simplecontroller/controllers"
+	"github.com/quietinvestor/simplecontroller/internal/controller"
 	"github.com/spf13/cobra"
 
 	"k8s.io/apimachinery/pkg/labels"
@@ -35,7 +35,7 @@ func main() {
 						namespace: {},
 					},
 					DefaultLabelSelector: labels.SelectorFromSet(map[string]string{
-						controllers.WatchKey: controllers.WatchValue,
+						controller.WatchKey: controller.WatchValue,
 					}),
 				},
 				HealthProbeBindAddress: ":8081",
@@ -60,7 +60,7 @@ func main() {
 				os.Exit(1)
 			}
 
-			if err := (&controllers.PodLabelReconciler{Client: mgr.GetClient()}).SetupWithManager(mgr); err != nil {
+			if err := (&controller.PodLabelReconciler{Client: mgr.GetClient()}).SetupWithManager(mgr); err != nil {
 				logger.Error(err, "unable to set up PodLabelReconciler")
 				os.Exit(1)
 			}
