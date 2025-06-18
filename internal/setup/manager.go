@@ -7,20 +7,21 @@ import (
 	"github.com/quietinvestor/simplecontroller/internal/controller"
 
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2/textlogger"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 )
 
-// SetupManager creates a new controller-runtime Manager,
+// Setup creates a new controller-runtime Manager,
 // configures namespace and label-based caching, adds health checks,
 // and registers the PodLabelReconciler.
-func SetupManager(namespace string, loggerConfig textlogger.Config) (ctrl.Manager, error) {
+func Setup(cfg *rest.Config, namespace string, loggerConfig textlogger.Config) (ctrl.Manager, error) {
 	logger := textlogger.NewLogger(&loggerConfig).WithName("simplecontroller")
 	ctrl.SetLogger(logger)
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 		Cache: cache.Options{
 			DefaultNamespaces: map[string]cache.Config{
 				namespace: {},

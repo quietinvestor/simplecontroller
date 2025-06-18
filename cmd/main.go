@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2/textlogger"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
 func main() {
@@ -21,7 +22,9 @@ func main() {
 		Use:   "simplecontroller",
 		Short: "Simple controller for labeling Pods",
 		Run: func(cmd *cobra.Command, args []string) {
-			mgr, err := setup.SetupManager(namespace, *loggerConfig)
+			cfg := config.GetConfigOrDie()
+
+			mgr, err := setup.Setup(cfg, namespace, *loggerConfig)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "failed to initialize manager: %v\n", err)
 				os.Exit(1)
